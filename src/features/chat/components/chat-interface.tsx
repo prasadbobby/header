@@ -1,4 +1,3 @@
-// src/features/chat/components/chat-interface.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -15,7 +14,8 @@ import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import { formatMarkdownResponse } from '@/lib/format-markdown';
 import { trackEvent } from '@/lib/analytics-service';
-import { v4 as uuidv4 } from 'uuid';
+import AppointmentBooking from './appointment-booking';
+import { Badge } from '@/components/ui/badge';
 
 interface ChatInterfaceProps {
   type: 'clinical' | 'literature' | 'symptom' | 'drug';
@@ -37,60 +37,47 @@ export default function ChatInterface({ type, sessionId }: ChatInterfaceProps) {
   const router = useRouter();
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [typingIndicator, setTypingIndicator] = useState(false);
+  const [agentType, setAgentType] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initRef = useRef(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Improved initialization logic with ref to prevent loops
   useEffect(() => {
-    // Skip if already initialized
     if (initRef.current) return;
     
     const initializeSession = async () => {
-      // Set flag to prevent repeated initialization
       initRef.current = true;
       
-      // If sessionId is provided
       if (sessionId) {
-        // Check if this session exists
         const sessionExists = sessions.some(s => s.id === sessionId);
         if (sessionExists) {
-          // Set as active if it exists
           setActiveSessionId(sessionId);
         } else if (type === 'clinical') {
-          // For clinical, find existing clinical sessions first
           const clinicalSessions = sessions.filter(s => s.type === 'clinical');
           if (clinicalSessions.length > 0) {
-            // Use first existing clinical session
             setActiveSessionId(clinicalSessions[0].id);
             router.replace(`/dashboard/chat/clinical/${clinicalSessions[0].id}`);
           } else {
-            // Only create new session if none exist
             const newId = createSession('clinical');
             router.replace(`/dashboard/chat/clinical/${newId}`);
           }
         } else {
-          // For other types, create new session
           const newId = createSession(type);
           router.replace(`/dashboard/chat/${type}/${newId}`);
         }
       } else {
-        // No sessionId provided, handle by type
         if (type === 'clinical') {
-          // For clinical, find existing clinical sessions first
           const clinicalSessions = sessions.filter(s => s.type === 'clinical');
           if (clinicalSessions.length > 0) {
-            // Use first existing clinical session
             setActiveSessionId(clinicalSessions[0].id);
             router.replace(`/dashboard/chat/clinical/${clinicalSessions[0].id}`);
           } else {
-            // Only create new if none exist
             const newId = createSession('clinical');
             router.replace(`/dashboard/chat/clinical/${newId}`);
           }
         } else {
-          // For other types, check for existing sessions
           const typeSessions = sessions.filter(s => s.type === type);
           if (typeSessions.length > 0) {
             setActiveSessionId(typeSessions[0].id);
@@ -102,21 +89,18 @@ export default function ChatInterface({ type, sessionId }: ChatInterfaceProps) {
         }
       }
     };
-    
-    initializeSession();
+initializeSession();
   }, [type, sessionId, sessions, setActiveSessionId, createSession, router]);
   
 
   useEffect(() => {
     if (activeSession && activeSession.messages.length === 0 && activeSessionId) {
-      // Track session creation
       trackEvent({
         eventType: 'session',
         agentType: type,
         sessionId: activeSessionId
       });
       
-      // Add appropriate welcome message based on type
       let welcomeMessage = '';
       switch (type) {
         case 'clinical':
@@ -142,10 +126,8 @@ export default function ChatInterface({ type, sessionId }: ChatInterfaceProps) {
     }
   }, [activeSession, activeSessionId, addMessage, type]);
 
-  // Improved scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
-      // Use a small timeout to ensure the DOM has updated
       const timeoutId = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ 
           behavior: 'smooth',
@@ -155,44 +137,31 @@ export default function ChatInterface({ type, sessionId }: ChatInterfaceProps) {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [activeSession?.messages]);
-  
-// in the handleSubmit function, improve the error handling and response processing:
+  }, [activeSession?.messages, typingIndicator]);
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   
   if (!message.trim() || isLoading || !activeSessionId) return;
   
-  // Add user message
   addMessage(activeSessionId, {
     content: message,
     role: 'user'
   });
   
-  // Track message event
   trackEvent({
     eventType: 'message',
     agentType: type,
     sessionId: activeSessionId
   });
   
-  // Clear input
   setMessage('');
-  
-  // Focus back on textarea
   textareaRef.current?.focus();
-  
-  // Set loading state
   setIsLoading(true);
-  
+  setTypingIndicator(true);
+  setAgentType(null);
+
   try {
-    console.log(`Sending request to /api/chat/${type}`, {
-      message,
-      sessionId: activeSessionId
-    });
-    
-    // Connect to your API endpoint that talks to Python backend
     const response = await fetch(`/api/chat/${type}`, {
       method: 'POST',
       headers: {
@@ -205,26 +174,27 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
     
     if (!response.ok) {
-      console.error(`API returned status: ${response.status}`);
       throw new Error(`Failed to get response: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log("Response from API:", data);
     
-    // Add assistant response from Python backend
     const responseContent = data.response || data.message || "I couldn't process that request properly. Please try again.";
-    console.log("Adding response to chat:", responseContent);
+    const detectedAgent = data.agent || type;
+    
+    setAgentType(detectedAgent);
+    setTypingIndicator(false);
     
     addMessage(activeSessionId, {
       content: formatMarkdownResponse(responseContent),
       role: 'assistant',
-      metadata: data.show_booking ? { showBooking: true, specialists: data.specialists } : undefined
+      metadata: {
+        ...(data.show_booking ? { showBooking: true, specialists: data.specialists } : {}),
+        agent: detectedAgent
+      }
     });
 
-    // If there are specialists data and booking UI should be shown
     if (data.show_booking && data.specialists) {
-      // Track a booking opportunity
       trackEvent({
         eventType: 'booking',
         agentType: 'symptom',
@@ -233,8 +203,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       });
     }
   } catch (error) {
-    console.error('Error getting AI response:', error);
-    // Add error message
+    setTypingIndicator(false);
+    setAgentType(null);
     addMessage(activeSessionId, {
       content: 'Sorry, I encountered an error processing your request. Please try again.',
       role: 'assistant'
@@ -244,7 +214,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
-  
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -279,6 +248,23 @@ const handleSubmit = async (e: React.FormEvent) => {
         return 'DI';
       default:
         return 'AI';
+    }
+  };
+
+  const getAgentBadge = (agent: string) => {
+    switch (agent) {
+      case 'clinical':
+        return <Badge className="ml-2 bg-blue-500">Clinical Agent</Badge>;
+      case 'literature':
+        return <Badge className="ml-2 bg-purple-500">Literature Agent</Badge>;
+      case 'symptom':
+        return <Badge className="ml-2 bg-green-500">Symptom Agent</Badge>;
+      case 'drug':
+        return <Badge className="ml-2 bg-red-500">Drug Agent</Badge>;
+      case 'image':
+        return <Badge className="ml-2 bg-orange-500">Image Agent</Badge>;
+      default:
+        return <Badge className="ml-2 bg-gray-500">{agent}</Badge>;
     }
   };
 
@@ -333,6 +319,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </Avatar>
                   )}
                   <div className="space-y-2">
+                    {msg.role === 'assistant' && msg.metadata?.agent && (
+                      <div className="flex items-center mb-1 text-xs">
+                        {getAgentBadge(msg.metadata.agent)}
+                      </div>
+                    )}
+                    
                     {(msg.metadata?.imageUrl || msg.metadata?.imageKey) && (
                       <div className="mb-2 overflow-hidden rounded-md border">
                         <img 
@@ -342,37 +334,31 @@ const handleSubmit = async (e: React.FormEvent) => {
                         />
                       </div>
                     )}
-                   
-
 <div className={`prose prose-sm max-w-none break-words ${msg.role === 'user' ? 'text-primary-foreground' : 'text-foreground'}`}>
-  {msg.content ? (
-    <ReactMarkdown 
-      rehypePlugins={[rehypeSanitize]}
-      components={{
-        h2: ({node, ...props}) => <h2 className="text-primary font-medium mt-4 mb-2" {...props} />,
-        h3: ({node, ...props}) => <h3 className="font-medium mt-3 mb-1" {...props} />,
-        p: ({node, ...props}) => <p className="mb-2" {...props} />,
-        ul: ({node, ...props}) => <ul className="pl-5 mb-2" {...props} />,
-        li: ({node, ...props}) => <li className="mb-1" {...props} />
-      }}
-    >
-      {msg.content}
-    </ReactMarkdown>
-  ) : (
-    <p className="text-muted-foreground italic">No content available</p>
-  )}
-  
-  {/* Show diet plan form if metadata indicates */}
-  {msg.metadata?.showDietForm && !showDietForm && (
-    <Button 
-      onClick={() => setShowDietForm(true)}
-      className="mt-2"
-    >
-      <Salad className="mr-2 h-4 w-4" />
-      Create Personalized Diet Plan
-    </Button>
-  )}
-</div>
+                    {msg.content ? (
+                      <ReactMarkdown 
+                        rehypePlugins={[rehypeSanitize]}
+                        components={{
+                          h2: ({node, ...props}) => <h2 className="text-primary font-medium mt-4 mb-2" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="font-medium mt-3 mb-1" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-2" {...props} />,
+                          ul: ({node, ...props}) => <ul className="pl-5 mb-2" {...props} />,
+                          li: ({node, ...props}) => <li className="mb-1" {...props} />
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-muted-foreground italic">No content available</p>
+                    )}
+                  </div>
+                    
+                    {msg.metadata?.showBooking && msg.metadata?.specialists && (
+                      <div className="mt-4 border-t pt-4">
+                        <AppointmentBooking specialists={msg.metadata.specialists} />
+                      </div>
+                    )}
+                    
                     <div className="text-xs opacity-50">
                       {format(new Date(msg.createdAt), 'h:mm a')}
                     </div>
@@ -380,6 +366,34 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
             ))}
+            
+            {typingIndicator && (
+              <div className="flex justify-start">
+                <div 
+                  className="flex max-w-[80%] items-start space-x-3 rounded-lg p-4 
+                  bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700"
+                >
+                  <Avatar className="h-8 w-8 mt-1">
+                    <AvatarFallback className="bg-primary text-primary-foreground">{getChatIcon()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    {agentType && (
+                      <div className="flex items-center mb-1 text-xs">
+                        {getAgentBadge(agentType)}
+                      </div>
+                    )}
+                    <div className="p-2 px-4 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
@@ -396,8 +410,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             className="flex-1 min-h-10 resize-none"
             disabled={isLoading || !activeSessionId}
           />
-          
-          <Button 
+ <Button 
             type="submit" 
             disabled={!message.trim() || isLoading || !activeSessionId}
             className="shrink-0"
