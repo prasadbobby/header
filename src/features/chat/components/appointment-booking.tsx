@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar, User } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics-service';
+
 interface Specialist {
   id: number;
   name: string;
@@ -63,8 +63,7 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
     if (!email || !name) return;
     setCurrentStep(BookingStep.Confirmation);
   };
-  
-  const handleConfirmBooking = async () => {
+const handleConfirmBooking = async () => {
     if (!selectedDoctor || !selectedTimeSlot) return;
     
     setIsBooking(true);
@@ -117,7 +116,6 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
       setIsBooking(false);
     }
   };
-  
   const resetBooking = () => {
     setCurrentStep(BookingStep.SelectDoctor);
     setSelectedDoctor(null);
@@ -131,6 +129,11 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
   
   const goBack = () => {
     setCurrentStep(prev => prev > 0 ? prev - 1 : prev);
+  };
+  
+  // Function to get initials for avatar fallback
+  const getInitials = (doctorName: string) => {
+    return doctorName.split(' ').map(n => n[0]).join('');
   };
   
   return (
@@ -169,8 +172,7 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
           ></div>
         </div>
       </div>
-      
-      {/* Step content */}
+ {/* Step content */}
       <div className="mt-4">
         {/* Step 1: Select Doctor */}
         {currentStep === BookingStep.SelectDoctor && (
@@ -185,8 +187,9 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
                 >
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={doctor.image_url} alt={doctor.name} />
-                      <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {getInitials(doctor.name)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <h5 className="font-medium">{doctor.name}</h5>
@@ -214,8 +217,9 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
             <div className="border rounded-lg p-4 mb-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={selectedDoctor.image_url} alt={selectedDoctor.name} />
-                  <AvatarFallback>{selectedDoctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {getInitials(selectedDoctor.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <h5 className="font-medium">{selectedDoctor.name}</h5>
@@ -223,8 +227,7 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
                 </div>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+ <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {selectedDoctor.available_slots.map((slot) => (
                 <div 
                   key={slot.formatted_time}
@@ -283,8 +286,7 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
                   placeholder="(123) 456-7890"
                 />
               </div>
-              
-              <div>
+ <div>
                 <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
                 <Input 
                   value={notes} 
@@ -342,8 +344,7 @@ export default function AppointmentBooking({ specialists }: AppointmentBookingPr
                 </div>
               )}
             </div>
-            
-            <Button 
+ <Button 
               className="w-full mt-4" 
               onClick={handleConfirmBooking}
               disabled={isBooking}
