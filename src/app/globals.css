@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Professional healthcare color palette for light mode */
+    --background: 210 40% 98%;  /* Light blue-gray background */
+    --foreground: 220 20% 16%;  /* Dark blue-gray text */
+
+    --muted: 210 30% 92%;       /* Subtle light blue-gray */
+    --muted-foreground: 220 10% 40%;  /* Muted text */
+
+    --popover: 210 40% 98%;     /* Light popover background */
+    --popover-foreground: 220 20% 16%;  /* Dark popover text */
+
+    --card: 0 0% 100%;          /* White card background */
+    --card-foreground: 220 20% 16%;  /* Dark card text */
+
+    --border: 220 13% 85%;      /* Light border color */
+    --input: 220 13% 85%;       /* Light input border */
+
+    --primary: 210 90% 42%;     /* Professional blue */
+    --primary-foreground: 0 0% 100%;  /* White text on primary */
+
+    --secondary: 199 60% 95%;   /* Light secondary blue */
+    --secondary-foreground: 200 60% 30%;  /* Darker secondary text */
+
+    --accent: 190 95% 39%;      /* Accent teal */
+    --accent-foreground: 0 0% 100%;  /* White text on accent */
+
+    --destructive: 0 84% 60%;   /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%;  /* White on destructive */
+
+    --ring: 210 90% 42%;        /* Focus ring color - same as primary */
+
+    --radius: 0.5rem;           /* Border radius */
+
+    /* Chart colors */
+    --chart-1: 210 90% 50%;     /* Blue */
+    --chart-2: 190 95% 39%;     /* Teal */
+    --chart-3: 150 60% 40%;     /* Green */
+    --chart-4: 45 93% 47%;      /* Yellow */
+    --chart-5: 0 84% 60%;       /* Red */
+
+    /* Sidebar specific colors */
+    --sidebar-background: 210 45% 98%;
+    --sidebar-foreground: 220 20% 16%;
+    --sidebar-primary: 210 90% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 220 20% 16%;
+    --sidebar-border: 220 13% 85%;
+    --sidebar-ring: 210 90% 42%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+
+    --primary: 210 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 210 90% 50%;
+
+    /* Chart colors */
+    --chart-1: 210 90% 50%;
+    --chart-2: 190 95% 45%;
+    --chart-3: 150 60% 45%;
+    --chart-4: 45 93% 47%;
+    --chart-5: 0 84% 60%;
+
+    /* Sidebar specific colors */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 90% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 210 90% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Add this to your src/app/globals.css */
+
+/* Markdown and emoji styles */
+.emoji {
+  display: inline-block;
+  font-size: 1.3em;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+.emoji.hospital { color: #1a7ed3; }
+.emoji.medication { color: #e74c3c; }
+.emoji.warning { color: #e67e22; }
+.emoji.stats { color: #3498db; }
+.emoji.clipboard { color: #1e90ff; }
+.emoji.doctor { color: #1a7ed3; }
+.emoji.research { color: #27ae60; }
+.emoji.book { color: #e74c3c; }
+.emoji.search { color: #3498db; }
+.emoji.alert { color: #e74c3c; }
+.emoji.eye { color: #2980b9; }
+.emoji.repeat { color: #e67e22; }
+.emoji.crystal-ball { color: #7f8c8d; }
+.emoji.salad { color: #27ae60; }
+.emoji.exercise { color: #3498db; }
+.emoji.balance { color: #f39c12; }
+.emoji.apple { color: #e74c3c; }
+.emoji.water { color: #3498db; }
+
+/* Prose styling for markdown content */
+.prose h2 {
+  font-size: 1.4rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #1a7ed3;
+  display: flex;
+  align-items: center;
+}
+
+.prose h3 {
+  font-size: 1.2rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.prose ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.prose ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: decimal;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose p {
+  margin-bottom: 0.75rem;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+/* Improve chat container styling */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Booking interface styling */
+.booking-container {
+  margin-top: 1.5rem;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+/* Refined shadow utilities for better layering */
+@layer utilities {
+  .shadow-card {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-elevation {
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.05),
+      0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Utility for subtle hover states */
+  .hover-elevation {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .hover-elevation:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+@layer utilities {
+  .min-h-screen {
+    min-height: 100vh; /* Fallback */
+    min-height: 100dvh;
+  }
+  .h-screen {
+    height: 100vh; /* Fallback */
+    height: 100dvh;
+  }
+}

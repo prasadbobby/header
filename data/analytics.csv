@@ -1,0 +1,7 @@
+timestamp,eventType,agentType,userId,sessionId,metadata
+2025-03-20T21:30:52.993Z,message,clinical,anonymous,,
+2025-03-20T21:31:18.090Z,image_analysis,image,anonymous,,{"hasPrompt":false,"fileType":"image/jpeg"}
+2025-03-20T21:32:42.194Z,message,clinical,anonymous,,
+2025-03-20T21:35:01.834Z,message,clinical,anonymous,,
+2025-03-20T21:35:47.479Z,booking,symptom,anonymous,,{"doctorName":"Dr. Rohan Singh","specialty":"Chest Physician","appointmentDate":"Saturday, March 22 at 03:00 PM","status":"confirmed"}
+2025-03-20T21:37:44.624Z,message,clinical,anonymous,,
